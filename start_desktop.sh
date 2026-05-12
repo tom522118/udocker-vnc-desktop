@@ -2,44 +2,39 @@
 
 # ==========================================================
 # 腳本名稱: start_desktop.sh
-# 功能描述: 啟動 udocker 內的 XFCE 桌面與 noVNC 服務
+# 功能描述: 啟動 udocker 內的 XFCE 桌面與 noVNC 服務 (自動偵測使用者)
 # ==========================================================
 
-# 設定 udocker 路徑
-export PATH=/root/udocker_bin/udocker-1.3.17/udocker:$PATH
+# 1. 自動設定 udocker 路徑 (使用 $HOME)
+export PATH=$HOME/udocker_bin/udocker-1.3.17/udocker:$PATH
+
+# 2. 自動偵測是否為 root 使用者，決定是否加入 --allow-root
+UDOCKER_CMD="udocker"
+if [ "$(id -u)" -eq 0 ]; then
+    UDOCKER_CMD="udocker --allow-root"
+    echo " >>> 偵測到以 root 身分執行，已自動加入 --allow-root"
+fi
 
 # 容器名稱
 CONTAINER_NAME="vnc-desktop"
 
 echo "----------------------------------------------------------"
-echo " [1/3] 正在檢查環境並準備啟動容器: $CONTAINER_NAME..."
+echo " [1/3] 正在準備啟動容器: $CONTAINER_NAME..."
+echo "       使用者家目錄: $HOME"
 echo "----------------------------------------------------------"
 
-echo " >>> 提示: VNC 伺服器將在容器內啟動"
-echo " >>> 提示: noVNC 網頁服務將對應到主機的 6080 埠號"
+# 啟動指令
+echo " [2/3] 正在執行 $UDOCKER_CMD run 指令..."
 
-# 啟動指令 (依照 readme.txt)
-echo " [2/3] 正在執行 udocker run 指令..."
-echo "       (這會啟動 VNC server, 生成 SSL 憑證並啟動 websockify)"
-
-udocker --allow-root run \
+$UDOCKER_CMD run \
     --user=root \
     --publish=6080:6080 \
     $CONTAINER_NAME bash -c '
-        echo " >>> [容器內] 正在啟動 TigerVNC Server (1024x768)..." && \
         vncserver -localhost no -SecurityTypes None -geometry 1024x768 --I-KNOW-THIS-IS-INSECURE && \
-        
-        echo " >>> [容器內] 正在生成 SSL 憑證 (self.pem)..." && \
         openssl req -new -subj "/C=JP" -x509 -days 365 -nodes -out self.pem -keyout self.pem && \
-        
-        echo " >>> [容器內] 正在啟動 websockify (noVNC 網頁代理)..." && \
         websockify -D --web=/usr/share/novnc/ --cert=self.pem 6080 localhost:5901 && \
-        
         echo "----------------------------------------------------------" && \
-        echo " [3/3] 啟動成功！服務已在後台運行。" && \
-        echo "       請在瀏覽器開啟: http://localhost:6080" && \
-        echo "       (若在遠端主機，請使用該主機的 IP 位址)" && \
+        echo " [3/3] 啟動成功！請在瀏覽器開啟: http://localhost:6080" && \
         echo "----------------------------------------------------------" && \
-        
         tail -f /dev/null
     '
