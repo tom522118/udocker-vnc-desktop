@@ -34,10 +34,11 @@ $UDOCKER_CMD run \
         rm -rf /tmp/.X*-lock /tmp/.X11-unix/X* /tmp/.ICE-unix/ /root/.vnc/*.log /root/.vnc/*.pid
         rm -rf /var/run/dbus/pid /root/.dbus/
 
-        echo " >>> [容器內] 正在初始化 D-Bus 服務..." && \
-        mkdir -p /var/run/dbus && \
+        echo " >>> [容器內] 正在初始化 D-Bus 服務 (Session Bus)..." && \
+        mkdir -p /var/lib/dbus && \
         dbus-uuidgen > /var/lib/dbus/machine-id && \
-        dbus-daemon --config-file=/usr/share/dbus-1/system.conf --print-address --fork && \
+        # 啟動 Session Bus 並匯入環境變數
+        export $(dbus-launch) && \
 
         echo " >>> [容器內] 正在啟動 TigerVNC Server (Display :1)..." && \
         vncserver :1 -localhost no -SecurityTypes None -geometry 1024x768 --I-KNOW-THIS-IS-INSECURE && \
