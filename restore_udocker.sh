@@ -27,9 +27,9 @@ else
     apt update
 fi
 
-# 1. 安裝 Python3 與 python-is-python3 (解決 env python 找不到的問題)
-echo " >>> 正在確保 Python3 與指令連結已就緒..."
-$INSTALL_CMD python3 python-is-python3
+# 1. 安裝 Python3, 指令連結, 以及 QEMU (解決 proot 警告)
+echo " >>> 正在確保 Python, QEMU 等依賴已就緒..."
+$INSTALL_CMD python3 python-is-python3 qemu-user-static
 
 if ! command -v python &> /dev/null; then
     echo " [!] 警告: 無法自動建立 python 連結，嘗試手動建立..."
