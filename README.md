@@ -105,6 +105,27 @@ bash /root/udocker/backup_udocker.sh
    ```
 4. **立即啟動**：還原完成後即可直接執行 `bash start_desktop.sh`。
 
+## 🛠️ 腳本詳細說明 (Script Technical Explanation)
+
+本專案的核心在於確保環境的可移植性。以下是備份與還原腳本的邏輯說明：
+
+### 1. 備份腳本 (`backup_udocker.sh`)
+此腳本採用 `tar` 指令進行封裝，主要執行以下邏輯：
+- **環境檢查**：自動建立 `/root/udocker_backup` 目錄。
+- **資料打包**：
+  - `/root/udocker_bin`: 包含 `udocker` 的執行程式與 Python 依賴環境。
+  - `/root/.udocker`: 這是最重要的目錄，包含所有已下載的 Docker Layer、容器設定以及您在容器內安裝的所有軟體（如 Firefox、XFCE）。
+  - `/root/udocker/*.sh`: 包含啟動與還原用的所有自動化腳本。
+- **壓縮優化**：使用 `-z` (gzip) 壓縮以減少檔案體積，並保留原始檔案權限。
+
+### 2. 還原腳本 (`restore_udocker.sh`)
+此腳本用於在新主機上重建環境：
+- **路徑還原**：將備份檔解壓至根目錄 `/`。由於備份時採用絕對路徑，解壓後會自動回到原位。
+- **環境初始化**：
+  - `export PATH`: 暫時性地將 udocker 加入系統路徑，以便執行指令。
+  - `udocker install`: 這是關鍵步驟，它會重新連結與校驗解壓後的工具鏈，確保在不同主機的內核環境下 udocker 仍能正常調用 Proot 或 RunC 引擎。
+- **權限修復**：確保所有啟動腳本具備執行權限。
+
 ## 📝 Git 說明
 本專案已執行 `git init`。
 - 排除目錄: `udocker_backup/` (備份檔體積較大，不納入版本控制)。
