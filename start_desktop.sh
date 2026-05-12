@@ -38,29 +38,23 @@ $UDOCKER_CMD run \
         mkdir -p /var/lib/dbus
         dbus-uuidgen > /var/lib/dbus/machine-id
 
-        # [關鍵修復] 寫入強化的 xstartup 腳本，確保 D-Bus 與 XFCE 完美結合
+        # [關鍵修復] 寫入強化的 xstartup 腳本，解決 Signal 11 崩潰問題
         mkdir -p /root/.vnc
         cat << "EOF" > /root/.vnc/xstartup
 #!/bin/bash
 export USER=root
 export HOME=/root
-export XDG_RUNTIME_DIR=/tmp/runtime-root
 
-# 確保目錄存在且權限正確 (在腳本執行時建立)
-mkdir -p $XDG_RUNTIME_DIR
-chmod 0700 $XDG_RUNTIME_DIR
+# 停用 XFCE 的硬體加速與合成，防止在 PRoot 中連線時引發 Signal 11 崩潰
+export XFWM4_COMPOSITING=false
+export LIBGL_ALWAYS_SOFTWARE=1
 
 unset DBUS_SESSION_BUS_ADDRESS
 unset SESSION_MANAGER
-
-# 正確啟動 dbus 並將變數匯出
-export $(dbus-launch)
-
 export XDG_CURRENT_DESKTOP="XFCE"
-export XDG_MENU_PREFIX="xfce-"
 
-# 使用 exec 取代背景執行，防止腳本提早結束
-exec startxfce4
+# 直接使用 dbus-launch 啟動 xfce4-session，繞過 startxfce4 wrapper 的潛在問題
+exec dbus-launch xfce4-session
 EOF
         chmod +x /root/.vnc/xstartup
 
