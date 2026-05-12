@@ -2,6 +2,32 @@
 
 本專案提供了一套在 RunPod (或其他 Linux 環境) 中使用 `udocker` 建立免 root 權限的 XFCE 桌面環境與 noVNC 網頁介面的自動化腳本。
 
+## 📥 取得本專案
+
+您可以透過以下三種方式取得此專案：
+
+### 1. 使用 Git HTTPS (最推薦)
+如果您在新的 RunPod 或 Linux 主機上，請執行：
+```bash
+git clone https://github.com/tom522118/udocker-vnc-desktop.git
+cd udocker-vnc-desktop
+```
+
+### 2. 使用 Git SSH
+如果您已配置 SSH Key，請執行：
+```bash
+git clone git@github.com:tom522118/udocker-vnc-desktop.git
+cd udocker-vnc-desktop
+```
+
+### 3. 下載 ZIP 壓縮檔
+如果您不想使用 Git，可以下載 ZIP 並解壓縮：
+```bash
+wget https://github.com/tom522118/udocker-vnc-desktop/archive/refs/heads/master.zip
+unzip master.zip
+cd udocker-vnc-desktop-master
+```
+
 ## 📁 專案結構
 
 - `start_desktop.sh`: 啟動腳本。啟動容器、VNC 伺服器與 noVNC。
