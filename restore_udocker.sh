@@ -2,7 +2,7 @@
 
 # ==========================================================
 # 腳本名稱: restore_udocker.sh
-# 功能描述: 全自動還原環境 (包含 Python 依賴自動安裝)
+# 功能描述: 將備份還原至目前使用者的家目錄
 # ==========================================================
 
 BACKUP_FILE=$1
@@ -13,55 +13,23 @@ if [ -z "$BACKUP_FILE" ]; then
 fi
 
 echo "----------------------------------------------------------"
-echo " [1/3] 正在檢查與安裝系統依賴 (Python)..."
+echo " [1/2] 正在還原資料到目前家目錄: $HOME"
 echo "----------------------------------------------------------"
 
-# 定義安裝工具 (自動偵測是否需要 sudo)
-INSTALL_CMD="apt install -y"
-if command -v sudo &> /dev/null; then
-    INSTALL_CMD="sudo apt install -y"
-    if [ "$(id -u)" -ne 0 ]; then
-        sudo apt update
-    fi
-else
-    apt update
-fi
-
-# 1. 安裝 Python3, 指令連結, 以及 QEMU (解決 proot 警告)
-echo " >>> 正在確保 Python, QEMU 等依賴已就緒..."
-$INSTALL_CMD python3 python-is-python3 qemu-user-static
-
-if ! command -v python &> /dev/null; then
-    echo " [!] 警告: 無法自動建立 python 連結，嘗試手動建立..."
-    if command -v sudo &> /dev/null; then
-        sudo ln -sf /usr/bin/python3 /usr/bin/python
-    else
-        ln -sf /usr/bin/python3 /usr/bin/python
-    fi
-fi
-
-echo "----------------------------------------------------------"
-echo " [2/3] 正在將資料還原至家目錄: $HOME"
-echo "----------------------------------------------------------"
-
-# 解壓縮
+# 解壓縮到當前使用者的家目錄
 tar -zxvf $BACKUP_FILE -C $HOME
 
-echo "----------------------------------------------------------"
-echo " [3/3] 正在初始化 udocker 執行環境..."
-echo "----------------------------------------------------------"
-
-# 設定路徑
+echo " [2/2] 正在初始化 udocker 環境..."
 export PATH=$HOME/udocker_bin/udocker-1.3.17/udocker:$PATH
 
 # 偵測是否需要 --allow-root
 UDOCKER_OPT=""
 [ "$(id -u)" -eq 0 ] && UDOCKER_OPT="--allow-root"
 
-# 執行初始化
-$HOME/udocker_bin/udocker-1.3.17/udocker/udocker $UDOCKER_OPT install
+udocker $UDOCKER_OPT install
 
 echo "----------------------------------------------------------"
-echo " ✅ 還原成功！"
-echo " 您現在可以執行：bash $HOME/udocker/start_desktop.sh"
+echo " 還原完成！您現在可以執行："
+echo " bash $HOME/udocker/start_desktop.sh"
 echo "----------------------------------------------------------"
+
