@@ -30,8 +30,14 @@ $UDOCKER_CMD run \
     --user=root \
     --publish=6080:6080 \
     $CONTAINER_NAME bash -c '
-        # [關鍵修復] 清理先前可能殘留的鎖定檔，確保永遠使用 5901 埠號
+        # [關鍵修復] 清理殘留鎖定檔與 D-Bus 檔案
         rm -rf /tmp/.X*-lock /tmp/.X11-unix/X* /tmp/.ICE-unix/ /root/.vnc/*.log /root/.vnc/*.pid
+        rm -rf /var/run/dbus/pid /root/.dbus/
+
+        echo " >>> [容器內] 正在初始化 D-Bus 服務..." && \
+        mkdir -p /var/run/dbus && \
+        dbus-uuidgen > /var/lib/dbus/machine-id && \
+        dbus-daemon --config-file=/usr/share/dbus-1/system.conf --print-address --fork && \
 
         echo " >>> [容器內] 正在啟動 TigerVNC Server (Display :1)..." && \
         vncserver :1 -localhost no -SecurityTypes None -geometry 1024x768 --I-KNOW-THIS-IS-INSECURE && \
