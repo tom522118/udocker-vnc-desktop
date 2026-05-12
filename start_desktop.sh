@@ -45,17 +45,22 @@ $UDOCKER_CMD run \
 export USER=root
 export HOME=/root
 export XDG_RUNTIME_DIR=/tmp/runtime-root
-mkdir -p \$XDG_RUNTIME_DIR
-chmod 0700 \$XDG_RUNTIME_DIR
+
+# 確保目錄存在且權限正確 (在腳本執行時建立)
+mkdir -p $XDG_RUNTIME_DIR
+chmod 0700 $XDG_RUNTIME_DIR
 
 unset DBUS_SESSION_BUS_ADDRESS
 unset SESSION_MANAGER
 
-eval "\$(dbus-launch --sh-syntax --exit-with-session)"
+# 正確啟動 dbus 並將變數匯出
+export $(dbus-launch)
 
 export XDG_CURRENT_DESKTOP="XFCE"
 export XDG_MENU_PREFIX="xfce-"
-startxfce4 &
+
+# 使用 exec 取代背景執行，防止腳本提早結束
+exec startxfce4
 EOF
         chmod +x /root/.vnc/xstartup
 
