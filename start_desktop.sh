@@ -38,6 +38,27 @@ $UDOCKER_CMD run \
         mkdir -p /var/lib/dbus
         dbus-uuidgen > /var/lib/dbus/machine-id
 
+        # [關鍵修復] 寫入強化的 xstartup 腳本，確保 D-Bus 與 XFCE 完美結合
+        mkdir -p /root/.vnc
+        cat << "EOF" > /root/.vnc/xstartup
+#!/bin/bash
+export USER=root
+export HOME=/root
+export XDG_RUNTIME_DIR=/tmp/runtime-root
+mkdir -p \$XDG_RUNTIME_DIR
+chmod 0700 \$XDG_RUNTIME_DIR
+
+unset DBUS_SESSION_BUS_ADDRESS
+unset SESSION_MANAGER
+
+eval "\$(dbus-launch --sh-syntax --exit-with-session)"
+
+export XDG_CURRENT_DESKTOP="XFCE"
+export XDG_MENU_PREFIX="xfce-"
+startxfce4 &
+EOF
+        chmod +x /root/.vnc/xstartup
+
         echo " >>> [容器內] 正在啟動 TigerVNC Server (使用 Display :1)..." && \
         vncserver :1 -localhost no -SecurityTypes None -geometry 1024x768 --I-KNOW-THIS-IS-INSECURE && \
         
