@@ -30,17 +30,15 @@ $UDOCKER_CMD run \
     --user=root \
     --publish=6080:6080 \
     $CONTAINER_NAME bash -c '
-        # [關鍵修復] 清理殘留鎖定檔與 D-Bus 檔案
+        # [關鍵修復] 徹底清理 VNC 與 D-Bus 殘留檔案
         rm -rf /tmp/.X*-lock /tmp/.X11-unix/X* /tmp/.ICE-unix/ /root/.vnc/*.log /root/.vnc/*.pid
         rm -rf /var/run/dbus/pid /root/.dbus/
 
-        echo " >>> [容器內] 正在初始化 D-Bus 服務 (Session Bus)..." && \
-        mkdir -p /var/lib/dbus && \
-        dbus-uuidgen > /var/lib/dbus/machine-id && \
-        # 啟動 Session Bus 並匯入環境變數
-        export $(dbus-launch) && \
+        # 確保 D-Bus 機器碼存在
+        mkdir -p /var/lib/dbus
+        dbus-uuidgen > /var/lib/dbus/machine-id
 
-        echo " >>> [容器內] 正在啟動 TigerVNC Server (Display :1)..." && \
+        echo " >>> [容器內] 正在啟動 TigerVNC Server (使用 Display :1)..." && \
         vncserver :1 -localhost no -SecurityTypes None -geometry 1024x768 --I-KNOW-THIS-IS-INSECURE && \
         
         echo " >>> [容器內] 正在生成 SSL 憑證 (self.pem)..." && \
@@ -48,8 +46,10 @@ $UDOCKER_CMD run \
         
         echo " >>> [容器內] 正在啟動 websockify (noVNC 網頁代理)..." && \
         websockify -D --web=/usr/share/novnc/ --cert=self.pem 6080 127.0.0.1:5901 && \
+        
         echo "----------------------------------------------------------" && \
-        echo " [3/3] 啟動成功！請在瀏覽器開啟: http://localhost:6080" && \
+        echo " ✅ 啟動成功！請在瀏覽器開啟: http://localhost:6080" && \
         echo "----------------------------------------------------------" && \
+        
         tail -f /dev/null
     '
